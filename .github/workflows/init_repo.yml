@@ -1,7 +1,6 @@
 name: Init Repository and Resolve Dynamic Template
 on:
-  project:
-    types: created
+  create
 
 jobs:
   init_repo:
