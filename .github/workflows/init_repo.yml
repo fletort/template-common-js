@@ -28,6 +28,6 @@ jobs:
           fi
           echo -e "${cGREEN}Save Public Key in $CI_REPORT_PROJECT_PATH.${cSTOP}"
           gh repo deploy-key add deploy-ci-report.pub --repo ${{ vars.ci_report_repo_path }} --allow-write --title "Publication pour ${GITHUB_USER}/${PROJECT_NAME}"
-          env:
-            GH_TOKEN: ${{ secrets.PAT_DYNAMIC_TEMPLATE }}
+        env:
+          GH_TOKEN: ${{ secrets.PAT_DYNAMIC_TEMPLATE }}
       
