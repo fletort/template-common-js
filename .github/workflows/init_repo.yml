@@ -6,8 +6,6 @@ jobs:
   init_repo:
     name: Init Repository
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         id: checkout
@@ -16,16 +14,17 @@ jobs:
       - name: "Manage Dynamic Template"
         run: |
           pip install jinja2-cli
-          jinja2 package.json.j2 >> package.json
+          jinja2 package.json.j2 > package.json
           rm package.json.j2
-          jinja2 README.md.j2 >> README.md
+          jinja2 README.md.j2 > README.md
           rm README.md.j2
-          jinja2 ./.github/DevSecOps.md.j2 >> ./.github/DevSecOps.md
+          jinja2 ./.github/DevSecOps.md.j2 > ./.github/DevSecOps.md
           rm ./.github/DevSecOps.md.j2
           rm ./.github/workflows/init_repo.yml
           git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name "${{ github.actor }}" 
-          git commit -am "Dynamic Template Substitution [skip ci]"
+          git config user.name "${{ github.actor }}"
+          git add .
+          git commit -m "Dynamic Template Substitution [skip ci]"
           git push
 
       - name: Create develop Branch
