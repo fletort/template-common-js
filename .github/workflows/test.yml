@@ -63,7 +63,7 @@ jobs:
       # un peu doublon avec tout ce que fait le module suivant
       - name: Publish Test Results in GitHub
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: ${{ hashFiles('test-results/**') != '' }} && always()
+        if: ${{always() && hashFiles('test-results/**') != '' }}
         with:
           files: |
             test-results/**/*.xml
