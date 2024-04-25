@@ -6,6 +6,8 @@ jobs:
   init_repo:
     name: Init Repository
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         id: checkout
