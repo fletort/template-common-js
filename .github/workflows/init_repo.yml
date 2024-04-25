@@ -41,8 +41,8 @@ jobs:
           jinja2 ./.github/DevSecOps.md.j2 >> ./.github/DevSecOps.md
           rm ./.github/DevSecOps.md.j2
           rm ./.github/workflows/init_repo.yml
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${{ github.actor }}" 
           git commit -am "Dynamic Template Substitution [skip ci]"
           git push
       
