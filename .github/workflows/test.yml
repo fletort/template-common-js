@@ -42,28 +42,28 @@ jobs:
 
       - name: Install Dependencies
         id: npm-ci
-        if: ${{ hashFiles('package.json') != '' }}
+        if: hashFiles('package.json') != ''
         run: npm ci
 
       - name: Check Format
         id: npm-format-check
-        if: ${{ hashFiles('package.json') != '' }}
+        if: hashFiles('package.json') != ''
         run: npm run format:check
 
       - name: Lint
         id: npm-lint
-        if: ${{ hashFiles('package.json') != '' }}
+        if: hashFiles('package.json') != ''
         run: npm run lint
 
       - name: Test
         id: npm-ci-test
-        if: ${{ hashFiles('package.json') != '' }}
+        if: hashFiles('package.json') != ''
         run: npm run ci-test
 
       # un peu doublon avec tout ce que fait le module suivant
       - name: Publish Test Results in GitHub
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: ${{always() && hashFiles('test-results/**') != '' }}
+        if: always() && hashFiles('test-results/**') != ''
         with:
           files: |
             test-results/**/*.xml
@@ -72,27 +72,27 @@ jobs:
 
       - name: Publish Tests and Coverage Results in Github
         uses: ArtiomTr/jest-coverage-report-action@v2      
-        if: always() && ${{ hashFiles('coverage/**') != '' }}
+        if: always() && hashFiles('coverage/**') != ''
         with:
           coverage-file: ./coverage/github_coverage.json
           base-coverage-file: ./coverage/github_coverage.json
           skip-step: all
 
       - name: Publish Coverage Report to Coveralls.io
-        if: always() && ${{ hashFiles('coverage/**') != '' }}
+        if: always() && hashFiles('coverage/**') != ''
         uses: coverallsapp/github-action@v2
 
       - name: Testspace client install & config
-        if: always() && ${{ hashFiles('test-results/**') != '' }}
+        if: always() && hashFiles('test-results/**') != ''
         uses: testspace-com/setup-testspace@v1
         with:
           domain: ${{github.repository_owner}}
       - name: Testspace push test content
-        if: always() && ${{ hashFiles('test-results/**') != '' }}
+        if: always() && hashFiles('test-results/**') != ''
         run: testspace "./test-results/*.xml"
 
       - name: Move Report File To Publish Them to our Global CI Pages
-        if: github.event_name == 'pull_request' && always() && ${{ hashFiles('coverge') != '' }} && ${{ hashFiles('test-results') != '' }}
+        if: github.event_name == 'pull_request' && always() && hashFiles('coverge') != '' && hashFiles('test-results') != ''
         id: move
         run: |
           mkdir pages
