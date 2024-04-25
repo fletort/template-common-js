@@ -42,24 +42,28 @@ jobs:
 
       - name: Install Dependencies
         id: npm-ci
+        if: ${{ hashFiles('package.json') != '' }}
         run: npm ci
 
       - name: Check Format
         id: npm-format-check
+        if: ${{ hashFiles('package.json') != '' }}
         run: npm run format:check
 
       - name: Lint
         id: npm-lint
+        if: ${{ hashFiles('package.json') != '' }}
         run: npm run lint
 
       - name: Test
         id: npm-ci-test
+        if: ${{ hashFiles('package.json') != '' }}
         run: npm run ci-test
 
       # un peu doublon avec tout ce que fait le module suivant
       - name: Publish Test Results in GitHub
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
+        if: always() && ${{ hashFiles('test-results') != '' }}
         with:
           files: |
             test-results/**/*.xml
@@ -68,13 +72,14 @@ jobs:
 
       - name: Publish Tests and Coverage Results in Github
         uses: ArtiomTr/jest-coverage-report-action@v2      
-        if: always()
+        if: always() && ${{ hashFiles('coverage') != '' }}
         with:
           coverage-file: ./coverage/github_coverage.json
           base-coverage-file: ./coverage/github_coverage.json
           skip-step: all
 
       - name: Publish Coverage Report to Coveralls.io
+        if: always() && ${{ hashFiles('coverage') != '' }}
         uses: coverallsapp/github-action@v2
 
       - name: Testspace client install & config
@@ -82,10 +87,11 @@ jobs:
         with:
           domain: ${{github.repository_owner}}
       - name: Testspace push test content
+        if: always() && ${{ hashFiles('test-results') != '' }}
         run: testspace "./test-results/*.xml"
 
       - name: Move Report File To Publish Them to our Global CI Pages
-        if: github.event_name == 'pull_request' && always()
+        if: github.event_name == 'pull_request' && always() && ${{ hashFiles('coverge') != '' }} && ${{ hashFiles('test-results') != '' }}
         id: move
         run: |
           mkdir pages
@@ -95,7 +101,7 @@ jobs:
           
       - name: Keep Html Report In Our Global CI Pages
         uses: peaceiris/actions-gh-pages@v4
-        if: always()
+        if: always() && (steps.move.outcome == 'success')
         with:
           external_repository: fletort/ci-report
           publish_branch: main
@@ -118,6 +124,5 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}" 
           git rm -r ${{ github.event.repository.name }}/${{ env.BRANCH_NAME }}
-          git add .
-          git commit -m "pr from ${{ env.BRANCH_NAME }} closed: ${{ github.repository }}/pull/${{ github.event.number }}"
+          git commit -am "pr from ${{ env.BRANCH_NAME }} closed: ${{ github.repository }}/pull/${{ github.event.number }}"
           git push
