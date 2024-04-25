@@ -12,9 +12,27 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
-        with:
-          ref: develop
-        
+
+      - name: "Manage Dynamic Template"
+        run: |
+          pip install jinja2-cli
+          jinja2 package.json.j2 >> package.json
+          rm package.json.j2
+          jinja2 README.md.j2 >> README.md
+          rm README.md.j2
+          jinja2 ./.github/DevSecOps.md.j2 >> ./.github/DevSecOps.md
+          rm ./.github/DevSecOps.md.j2
+          rm ./.github/workflows/init_repo.yml
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+          git config user.name "${{ github.actor }}" 
+          git commit -am "Dynamic Template Substitution [skip ci]"
+          git push
+
+      - name: Create develop Branch
+        run: |
+          git checkout -b develop
+          git push origin develop
+
       - name: Define Branch Protection
         run: |
           gh api "repos/${{ github.repository }}/branches/main/protection" --method PUT --input ./.github/workflows/init/branch_protection.json
@@ -35,19 +53,3 @@ jobs:
           gh repo deploy-key add key.pub --repo ${{ vars.ci_report_repo_path }} --allow-write --title "Publication pour ${{ github.repository }}"
         env:
           GH_TOKEN: ${{ secrets.PAT_DYNAMIC_TEMPLATE }}
-      
-      - name: "Manage Dynamic Template"
-        run: |
-          pip install jinja2-cli
-          jinja2 package.json.j2 >> package.json
-          rm package.json.j2
-          jinja2 README.md.j2 >> README.md
-          rm README.md.j2
-          jinja2 ./.github/DevSecOps.md.j2 >> ./.github/DevSecOps.md
-          rm ./.github/DevSecOps.md.j2
-          rm ./.github/workflows/init_repo.yml
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-          git config user.name "${{ github.actor }}" 
-          git commit -am "Dynamic Template Substitution [skip ci]"
-          git push
-      
