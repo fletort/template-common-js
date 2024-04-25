@@ -31,3 +31,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT_DYNAMIC_TEMPLATE }}
       
+      - name: "Manage Dynamic Template"
+        run: |
+          pip install jinja2-cli
+          jinja2 package.json.j2 >> package.json
+          rm package.json.j2
+          jinja2 README.md.j2 >> README.md
+          rm README.md.j2
+          jinja2 ./.github/DevSecOps.md.j2 >> ./.github/DevSecOps.md
+          rm ./.github/DevSecOps.md.j2
+          rm ./.github/workflows/init_repo.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git commit -am "Dynamic Template Substitution [skip ci]"
+          git push
+      

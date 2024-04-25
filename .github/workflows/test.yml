@@ -118,5 +118,5 @@ jobs:
           git config user.email "${{ github.actor }}@users.noreply.github.com"
           git config user.name "${{ github.actor }}" 
           git rm -r ${{ github.event.repository.name }}/${{ env.BRANCH_NAME }}
-          git commit -m "pr from ${{ env.BRANCH_NAME }} closed: ${{ github.repository }}/pull/${{ github.event.number }}"
+          git commit -am "pr from ${{ env.BRANCH_NAME }} closed: ${{ github.repository }}/pull/${{ github.event.number }}"
           git push
