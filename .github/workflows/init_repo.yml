@@ -17,17 +17,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT_DYNAMIC_TEMPLATE }}
       
-      - name: "Manage cnx to internal ${{ vars.ci_report_repo }} repo"
+      - name: "Manage cnx to internal ${{ vars.ci_report_repo_path }} repo"
         run: |
-          ssh-keygen -t rsa -b 4096 -C "Deployement to ${{ vars.ci_report_repo_path }}" -f deploy-ci-report -N ""
-          gh secret set DEPLOY_CI_REPORT_KEY --repo $GITHUB_USER/$PROJECT_NAME < deploy-ci-report
-          existing_id=$(gh repo deploy-key list --repo ${{ vars.ci_report_repo_path }} --json id,title --jq ".[] | select(.title | contains(\"${PROJECT_NAME}\")) | .id")
+          ssh-keygen -t rsa -b 4096 -C "Deployement to ${{ vars.ci_report_repo_path }}" -f key -N ""
+          gh secret set DEPLOY_CI_REPORT_KEY --repo ${{ github.repository }} < key
+          existing_id=$(gh repo deploy-key list --repo ${{ vars.ci_report_repo_path }} --json id,title --jq ".[] | select(.title | contains(\"${{ github.repository }}\")) | .id")
           if [[ -n $existing_id ]]; then # Si la clé est déjà définie
-            echo -e "${cBLUE}The Public Key for ${PROJECT_NAME} already exist in ${{ vars.ci_report_repo_path }}, we delete it.${cSTOP}"
+            echo -e "${cBLUE}The Public Key for ${{ github.repository }} already exist in ${{ vars.ci_report_repo_path }}, we delete it.${cSTOP}"
             gh repo deploy-key delete $existing_id --repo ${{ vars.ci_report_repo_path }}
           fi
           echo -e "${cGREEN}Save Public Key in $CI_REPORT_PROJECT_PATH.${cSTOP}"
-          gh repo deploy-key add deploy-ci-report.pub --repo ${{ vars.ci_report_repo_path }} --allow-write --title "Publication pour ${GITHUB_USER}/${PROJECT_NAME}"
+          gh repo deploy-key add key.pub --repo ${{ vars.ci_report_repo_path }} --allow-write --title "Publication pour ${{ github.repository }}"
         env:
           GH_TOKEN: ${{ secrets.PAT_DYNAMIC_TEMPLATE }}
       
