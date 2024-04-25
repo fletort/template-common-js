@@ -10,6 +10,9 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
+        with:
+          ref: develop
+        
       - name: Define Branch Protection
         run: |
           gh api "repos/${{ github.repository }}/branches/main/protection" --method PUT --input ./.github/workflows/init/branch_protection.json
