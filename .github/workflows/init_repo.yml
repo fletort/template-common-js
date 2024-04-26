@@ -68,12 +68,16 @@ jobs:
           found=$(jq ".[] | select(.source_repo_url==\"https://github.com/${{ github.repository }}\")" response.txt)
           if [[ -z "$found" ]]; then
             echo -e "${cGREEN}TestSpace Project is going to be created.${cSTOP}"
-            ret=$(curl --no-progress-meter -X POST \
+            http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X POST \
               -H "Authorization: Token ${{ secrets.TESTSPACE_TOKEN }}" \
               -H "Content-Type: application/json" \
               --data '{"name":"${${{ github.repository }}///:}", "source_repo": "'"github:${{ github.repository }}"'", "is_private": false}' \
               "https://${{ github.repository_owner }}.testspace.com/api/projects")
-            echo $ret
+            if [ $http_response != "200" ]; then
+              echo -e "${cRED}FATAL: Error when trying to create project on testspace (${http_response}).${cSTOP}"
+              cat response.txt
+              exit 1
+            fi
             testspace_project_id=$(jq '.id' <<< $ret)
             testspace_project_name=$(jq '.name' <<< $found)
             echo -e "${cGREEN}The TestSpace Project $testspace_project_name was created with id $testspace_project_id.${cSTOP}"
