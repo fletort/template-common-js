@@ -14,7 +14,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: "Manage Dynamic Template"
-        if: hashFiles('README.md.j2') != '' # in case of replay on error in latter steps
+        # if already done (we are in a replay case on a latter failure for example)
+        if: hashFiles('README.md.j2') != ''
         run: |
           pip install jinja2-cli
           jinja2 package.json.j2 > package.json
