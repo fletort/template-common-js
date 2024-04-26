@@ -59,7 +59,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT_DYNAMIC_TEMPLATE }}
 
-      - name: "TestSpace Project Creation"
+      - name: "TestSpace  Project Creation"
         run: |
           http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X GET -H "Authorization: Token ${{ secrets.TESTSPACE_TOKEN }}" "https://${{ github.repository_owner }}.testspace.com/api/projects")
           if [ $http_response != "200" ]; then
