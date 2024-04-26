@@ -67,6 +67,8 @@ jobs:
           git add .
           git commit -m "Dynamic Template Substitution [skip ci]"
           git push
+        env:
+          CI_REPORT_REPO_PATH: ${{ vars.ci_report_repo_path }}
 
       - name: Create develop Branch
         # need write permission on the token (not the case by default on organization)

@@ -46,7 +46,7 @@ Following action are made:
   - Test and Coverage Result are also deployed inside GitHub project (comments,
   indicator, ...) with the help of the  [jest-coverage-report](https://github.com/marketplace/actions/jest-coverage-report)
   action.
-  - Test Report are send to [testspace](https://{{ environ('TESTSPACE_OWNER') }}.testspace.com/projects)
+  - Test Report are send to [testspace](https://{{ environ('GITHUB_REPOSITORY_OWNER') }}.testspace.com/projects)
   - Coverage Report are send to [coveralls](https://coveralls.io/github/{{ environ('GITHUB_REPOSITORY') }})
   - Test and Coverage HTML reports files are also send inside our global CI Report
   Pages Repository. This step use the local SSH private key stored in the
