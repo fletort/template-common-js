@@ -75,7 +75,7 @@ jobs:
               -H "Content-Type: application/json" \
               --data '{"name":"'"${GITHUB_REPOSITORY/\//:}"'", "source_repo": "github:${{ github.repository }}", "is_private": false}' \
               "https://${{ github.repository_owner }}.testspace.com/api/projects")
-            if [ $http_response != "200" ]; then
+            if [ $http_response != "201" ]; then
               echo -e "${cRED}FATAL: Error when trying to create project on testspace (${http_response}).${cSTOP}"
               cat response.txt
               exit 1
