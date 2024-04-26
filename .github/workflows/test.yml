@@ -83,16 +83,18 @@ jobs:
         uses: coverallsapp/github-action@v2
 
       - name: Testspace client install & config
+        id: testspace_init
         if: always() && hashFiles('test-results/**') != ''
         uses: testspace-com/setup-testspace@v1
         with:
           domain: ${{github.repository_owner}}
+
       - name: Testspace push test content
-        if: always() && hashFiles('test-results/**') != ''
+        if: always() && (steps.testspace_init.outcome == 'success')
         run: testspace "./test-results/*.xml"
 
       - name: Move Report File To Publish Them to our Global CI Pages
-        if: github.event_name == 'pull_request' && always() && hashFiles('coverge') != '' && hashFiles('test-results') != ''
+        if: always() && github.event_name == 'pull_request' &&  hashFiles('coverge/**') != '' && hashFiles('test-results/**') != ''
         id: move
         run: |
           mkdir pages
@@ -104,7 +106,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         if: always() && (steps.move.outcome == 'success')
         with:
-          external_repository: fletort/ci-report
+          external_repository: ${{ vars.ci_report_repo_path }}
           publish_branch: main
           deploy_key: ${{ secrets.DEPLOY_CI_REPORT_KEY }}
           publish_dir: ./pages
@@ -119,7 +121,7 @@ jobs:
         id: checkout
         uses: actions/checkout@v4
         with:
-          repository: fletort/ci-report
+          repository: ${{ vars.ci_report_repo_path }}
           ssh-key: ${{ secrets.DEPLOY_CI_REPORT_KEY }}
       - run: | # pour l'email, voir  https://github.com/orgs/community/discussions/40405
           git config user.email "${{ github.actor }}@users.noreply.github.com"
