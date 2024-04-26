@@ -35,6 +35,7 @@ jobs:
 
       - name: Setup Node.js
         id: setup-node
+        if: hashFiles('package-lock.json') != ''
         uses: actions/setup-node@v3
         with:
           node-version: 20
