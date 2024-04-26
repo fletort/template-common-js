@@ -35,8 +35,8 @@ jobs:
               cat response.txt
               exit 1
             fi
-            testspace_project_id=$(jq '.id' <<< $ret)
-            testspace_project_name=$(jq '.name' <<< $found)
+            testspace_project_id=$(jq '.id' response.txt)
+            testspace_project_name=$(jq '.name' response.txt)
             echo -e "${cGREEN}The TestSpace Project $testspace_project_name was created with id $testspace_project_id.${cSTOP}"
           else
             testspace_project_id=$(jq '.id' <<< $found)
