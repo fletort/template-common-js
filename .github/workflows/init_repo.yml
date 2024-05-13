@@ -9,6 +9,27 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check if inside Organization (variable can be already available)
+        run: |
+          http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X GET "https://api.github.com/users/${{ github.repository_owner }}")
+          if [ $http_response != "200" ]; then
+            echo "FATAL: GITHUB API - Error when trying to get user/organization information ${{ github.repository_owner }} (${http_response})."
+            cat response.txt
+            exit 1
+          fi
+          type=$(jq ".type" response.txt)
+          if [[ "$type" == "\"Organization\"" ]]; then
+            IS_INSIDE_ORGANIZATION=1
+          else
+            IS_INSIDE_ORGANIZATION=0
+          fi
+
+      - name: "Check if scret for TestSpace Project Creation is available"
+        env:
+          check_secret: ${{ secrets.TESTSPACE_TOKEN }}
+        if: ${{ env.check_secret == '' }}
+        run: echo "The secret TESTSPACE_TOKEN is not defined inside your organization. TestSpace Project Creation can not be doned"
+
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
