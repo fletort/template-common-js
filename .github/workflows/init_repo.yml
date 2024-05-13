@@ -9,12 +9,34 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
+      - name: Check if inside Organization (variable can be already available)
+        run: |
+          http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X GET "https://api.github.com/users/${{ github.repository_owner }}")
+          if [ $http_response != "200" ]; then
+            echo "FATAL: GITHUB API - Error when trying to get user/organization information ${{ github.repository_owner }} (${http_response})."
+            cat response.txt
+            exit 1
+          fi
+          type=$(jq ".type" response.txt)
+          if [[ "$type" == "\"Organization\"" ]]; then
+            echo "IS_INSIDE_ORGANIZATION=1" >> $GITHUB_ENV
+          else
+            echo "IS_INSIDE_ORGANIZATION=0" >> $GITHUB_ENV
+          fi
+
+      - name: "Error when secret for TestSpace Project Creation is not available"
+        id: testspace_token
+        continue-on-error: true
+        env:
+          check_secret: ${{ secrets.TESTSPACE_TOKEN }}
+        if: ${{ env.check_secret == '' }}
+        run: |
+          echo "::error The secret TESTSPACE_TOKEN is not defined. Automatic TestSpace Project Creation can not be doned"
+          exit 1
 
       # Need the secret token (ok in organization if global secret, if not need the repo tool)
       - name: "TestSpace  Project Creation"
+        if: always() && (steps.testspace_token.outcome == 'skipped')
         run: |
           http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X GET -H "Authorization: Token ${{ secrets.TESTSPACE_TOKEN }}" "https://${{ github.repository_owner }}.testspace.com/api/projects")
           if [ $http_response != "200" ]; then
@@ -45,6 +67,10 @@ jobs:
           fi
           echo "TESTSPACE_SPACE_ID=${testspace_project_id}" >> $GITHUB_ENV
 
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+  
       # Can be done in all the case, but not if we need variable (at this is my case)
       # in this case, global org var is ok or need a repo tool
       - name: "Manage Dynamic Template"
