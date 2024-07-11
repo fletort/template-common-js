@@ -1,6 +1,7 @@
 name: Init Repository and Resolve Dynamic Template
 on:
-  create
+  - create
+  - workflow_dispatch
 
 jobs:
   init_repo:
@@ -9,7 +10,8 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check if inside Organization (variable can be already available)
+      - name: On template creation, check if inside Organization (variable can be already available)
+        if: ${{ github.event.action == 'create' }}
         run: |
           http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X GET "https://api.github.com/users/${{ github.repository_owner }}")
           if [ $http_response != "200" ]; then
@@ -22,6 +24,7 @@ jobs:
             echo "IS_INSIDE_ORGANIZATION=1" >> $GITHUB_ENV
           else
             echo "IS_INSIDE_ORGANIZATION=0" >> $GITHUB_ENV
+            exit 1
           fi
 
       - name: "Error when secret for TestSpace Project Creation is not available"
@@ -35,37 +38,12 @@ jobs:
           exit 1
 
       # Need the secret token (ok in organization if global secret, if not need the repo tool)
-      - name: "TestSpace  Project Creation"
+      - name: "TestSpace Project Creation"
+        id: testspace_creation
         if: always() && (steps.testspace_token.outcome == 'skipped')
-        run: |
-          http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X GET -H "Authorization: Token ${{ secrets.TESTSPACE_TOKEN }}" "https://${{ github.repository_owner }}.testspace.com/api/projects")
-          if [ $http_response != "200" ]; then
-            echo -e "${cRED}FATAL: Error when trying to get project list from testspace (${http_response}).${cSTOP}"
-            cat response.txt
-            exit 1
-          fi
-          found=$(jq ".[] | select(.source_repo_url==\"https://github.com/${{ github.repository }}\")" response.txt)
-          if [[ -z "$found" ]]; then
-            echo -e "${cGREEN}TestSpace Project is going to be created.${cSTOP}"
-            http_response=$(curl -o response.txt -w "%{response_code}" --no-progress-meter -X POST \
-              -H "Authorization: Token ${{ secrets.TESTSPACE_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              --data '{"name":"'"${GITHUB_REPOSITORY/\//:}"'", "source_repo": "github:${{ github.repository }}", "is_private": false}' \
-              "https://${{ github.repository_owner }}.testspace.com/api/projects")
-            if [ $http_response != "201" ]; then
-              echo -e "${cRED}FATAL: Error when trying to create project on testspace (${http_response}).${cSTOP}"
-              cat response.txt
-              exit 1
-            fi
-            testspace_project_id=$(jq '.id' response.txt)
-            testspace_project_name=$(jq '.name' response.txt)
-            echo -e "${cGREEN}The TestSpace Project $testspace_project_name was created with id $testspace_project_id.${cSTOP}"
-          else
-            testspace_project_id=$(jq '.id' <<< $found)
-            testspace_project_name=$(jq '.name' <<< $found)
-            echo -e "${cBLUE}The TestSpace Project $testspace_project_name already exits with id $testspace_project_id.${cSTOP}"
-          fi
-          echo "TESTSPACE_SPACE_ID=${testspace_project_id}" >> $GITHUB_ENV
+        uses: fletort/testspace-create-action@v1
+        with:
+          token: ${{ secrets.TESTSPACE_TOKEN }}
 
       - name: Checkout
         id: checkout
@@ -77,6 +55,9 @@ jobs:
         # if already done (we are in a replay case on a latter failure for example)
         if: hashFiles('README.md.j2') != ''
         # need write permission on the token (not the case by default on organization)
+        env:
+          TESTSPACE_SPACE_ID: ${{ steps.testspace_creation.outputs.id }}
+          CI_REPORT_REPO_PATH: ${{ vars.ci_report_repo_path }}
         run: |
           pip install jinja2-cli
           jinja2 package.json.j2 > package.json
@@ -93,8 +74,6 @@ jobs:
           git add .
           git commit -m "Dynamic Template Substitution [skip ci]"
           git push
-        env:
-          CI_REPORT_REPO_PATH: ${{ vars.ci_report_repo_path }}
 
       - name: Create develop Branch
         # need write permission on the token (not the case by default on organization)
